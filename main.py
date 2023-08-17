@@ -43,7 +43,7 @@ def collate_fn(batch):
     model_inputs = {'labels': [], 'pixel_values': []}
     for obj in batch:
         model_inputs['labels'].append(obj[1])
-        model_inputs['pixel_values'].append(obj[0]['img_path'])
+        model_inputs['pixel_values'].append(obj)
     model_inputs['labels'] = tokenization_fn(model_inputs['labels'])
     model_inputs['pixel_values'] = feature_extraction_fn(model_inputs['pixel_values'])
     return model_inputs
