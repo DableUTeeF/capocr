@@ -1,5 +1,4 @@
 import os
-# os.environ['CUDA_VISIBLE_DEVICES'] = ''
 import torch
 from transformers import ViTImageProcessor, AutoTokenizer, VisionEncoderDecoderModel
 import nltk
@@ -43,7 +42,7 @@ def collate_fn(batch):
     model_inputs = {'labels': [], 'pixel_values': []}
     for obj in batch:
         model_inputs['labels'].append(obj[1])
-        model_inputs['pixel_values'].append(obj)
+        model_inputs['pixel_values'].append(obj[0])
     model_inputs['labels'] = tokenization_fn(model_inputs['labels'])
     model_inputs['pixel_values'] = feature_extraction_fn(model_inputs['pixel_values'])
     return model_inputs
@@ -97,6 +96,7 @@ if __name__ == '__main__':
         bs = 16
         workers = 4
     elif os.path.exists("/media/palm/Data/capgen/"):
+        os.environ['CUDA_VISIBLE_DEVICES'] = ''
         vit_model = "google/vit-base-patch16-224-in21k"
         text_decode_model = "ai-forever/mGPT"
         src_dir = "/media/palm/Data/ocr/"
