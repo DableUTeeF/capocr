@@ -93,6 +93,7 @@ if __name__ == '__main__':
         detector_weight = '/project/lt200060-capgen/palm/pretrained/dino-4scale_r50_8xb2-12e_coco_20221202_182705-55b2bba2.pth'
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
         bleu_path = '/home/nhongcha/hf-caption/bleu/bleu.py'
+        rouge_path = '/home/nhongcha/hf-caption/rouge/'
         bs = 16
         workers = 4
     elif os.path.exists("/media/palm/Data/capgen/"):
@@ -105,6 +106,7 @@ if __name__ == '__main__':
         detector_weight = ''
         output_dir = os.path.join('/tmp/out/mm_dino_8x8')
         bleu_path = 'bleu'
+        rouge_path = 'bleu'
         bs = 1
         workers = 0
     else:
@@ -117,10 +119,11 @@ if __name__ == '__main__':
         detector_weight = '/home/palm/PycharmProjects/mmdetection/cp/dino-4scale_r50_8xb2-12e_coco_20221202_182705-55b2bba2.pth'
         output_dir = os.path.join('/tmp/out/mm_dino_8x8')
         bleu_path = 'bleu'
+        rouge_path = 'bleu'
         bs = 2
         workers = 0
-    rouge = evaluate.load("rouge")
-    bleu = evaluate.load("bleu")
+    rouge = evaluate.load(rouge_path)
+    bleu = evaluate.load(bleu_path)
     os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite)
     os.makedirs(logdir, exist_ok=args.overwrite)
     ignore_pad_token_for_loss = True
