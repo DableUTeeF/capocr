@@ -76,8 +76,6 @@ def compute_metrics(eval_preds):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
-    parser.add_argument('featdir', type=str)
-    parser.add_argument('hidden_size', type=int)
     parser.add_argument('--max_per_img', type=int, default=50)
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
