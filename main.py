@@ -84,7 +84,7 @@ if __name__ == '__main__':
     logdir = os.path.join(args.logdir, expname)
 
     if os.path.exists("/project/lt200060-capgen/coco"):
-        vit_model = "/project/lt200060-capgen/palm/huggingface/vit_tiny_r_s16_p8_224.augreg_in21k"
+        vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
         text_decode_model = "/project/lt200060-capgen/palm/huggingface/mGPT"
         src_dir = "/project/lt200060-capgen/peune/ocr"
         train_jsonl = '/project/lt200060-capgen/palm/ocr/data/train.jsonl'
