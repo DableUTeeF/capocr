@@ -76,6 +76,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
     parser.add_argument('--max_per_img', type=int, default=50)
+    parser.add_argument('--bs', type=int, default=50)
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
@@ -93,7 +94,7 @@ if __name__ == '__main__':
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
         bleu_path = '/home/nhongcha/hf-caption/bleu/bleu.py'
         rouge_path = '/home/nhongcha/hf-caption/rouge/'
-        bs = 16
+        bs = args.bs
         workers = 4
     elif os.path.exists("/media/palm/Data/capgen/"):
         os.environ['CUDA_VISIBLE_DEVICES'] = ''
