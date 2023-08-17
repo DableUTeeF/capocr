@@ -76,7 +76,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
     parser.add_argument('--max_per_img', type=int, default=50)
-    parser.add_argument('--bs', type=int, default=50)
+    parser.add_argument('--bs', type=int, default=16)
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     logdir = os.path.join(args.logdir, expname)
 
     if os.path.exists("/project/lt200060-capgen/coco"):
-        vit_model = "/project/lt200060-capgen/palm/huggingface/vit-large-patch16-384"
+        vit_model = "/project/lt200060-capgen/palm/huggingface/vit_tiny_r_s16_p8_224.augreg_in21k"
         text_decode_model = "/project/lt200060-capgen/palm/huggingface/mGPT"
         src_dir = "/project/lt200060-capgen/peune/ocr"
         train_jsonl = '/project/lt200060-capgen/palm/ocr/data/train.jsonl'
