@@ -42,7 +42,7 @@ def create_text_generator_mp(m, txtdir):
     for j, f in enumerate(filelist):
         file = open(f, "r")
         for i, line in enumerate(file):
-            if i % 8 != m:
+            if i % args.num_workers != m:
                 continue
             line = deemojify(line.rstrip('\n'))
             for k in range(0, len(line), 100):  # skip 150 per chunk
@@ -169,10 +169,18 @@ if __name__ == "__main__":
     array = []
     for i in range(args.num_workers):
         array.append((i, args.txt, 1000000 // args.num_workers))
-    with open(f"{args.out}/annotations", "w") as file:
-        j = 0
-        with Pool() as pool:
-            res = pool.starmap(mp_save, array)
-            for re in res:
-                file.write(re)
+    j = 0
+    with Pool() as pool:
+        res = pool.starmap(mp_save, array)
+        all_data = '\n'.join(res).split('\n')
+    with open(f"{args.out}/train.jsonl", "w") as file:
+        for line in all_data[:-20000]:
+            if len(line) > 1:
+                file.write(line)
+                file.write('\n')
+    with open(f"{args.out}/val.jsonl", "w") as file:
+        for line in all_data[-20000:]:
+            if len(line) > 1:
+                file.write(line)
+                file.write('\n')
     print(time.time() - t)
