@@ -6,7 +6,7 @@ import re
 import albumentations as A
 import argparse
 import glob
-from tqdm import tqdm
+import time
 from multiprocessing import Pool, Value, Array
 
 
@@ -65,6 +65,8 @@ def mp_save(m, txtdir, max_num):
         img = noise(img)
         cv2.imwrite(filename, img)
         out_text += "{\"filename\": \"%s\", \"text\": \"%s\"}\n" % (filename, text)
+        if m == 0 and j % 10000 == 0:
+            print(j, flush=True)
         if j >= max_num:
             return out_text
     return out_text
@@ -152,6 +154,7 @@ def rotate_bound(image):
 
 
 if __name__ == "__main__":
+    t = time.time()
     sepia_ = A.ToSepia(p=0.5)
     noise_ = A.MultiplicativeNoise(multiplier=[0.9, 1.1], elementwise=True, per_channel=True, p=1)
 
@@ -172,3 +175,4 @@ if __name__ == "__main__":
             res = pool.starmap(mp_save, array)
             for re in res:
                 file.write(re)
+    print(time.time() - t)
