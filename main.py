@@ -86,9 +86,9 @@ if __name__ == '__main__':
     if os.path.exists("/project/lt200060-capgen/coco"):
         vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
         text_decode_model = "/project/lt200060-capgen/palm/huggingface/mGPT"
-        src_dir = "/project/lt200060-capgen/peune/ocr"
-        train_jsonl = '/project/lt200060-capgen/palm/ocr/data/train.jsonl'
-        val_jsonl = '/project/lt200060-capgen/palm/ocr/data/val.jsonl'
+        src_dir = "/project/lt200060-capgen/palm/capocr"
+        train_jsonl = '/project/lt200060-capgen/palm/capocr/data/train.jsonl'
+        val_jsonl = '/project/lt200060-capgen/palm/capocr/data/val.jsonl'
         config_file = '/home/nhongcha/mmdetection/configs/dino/dino-4scale_r50_8xb2-12e_coco.py'
         detector_weight = '/project/lt200060-capgen/palm/pretrained/dino-4scale_r50_8xb2-12e_coco_20221202_182705-55b2bba2.pth'
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
