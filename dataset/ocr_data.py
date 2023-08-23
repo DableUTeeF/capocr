@@ -3,7 +3,7 @@ import warnings
 warnings.filterwarnings('ignore')
 import os
 from torch.utils.data import Dataset
-from .transforms import CVColorJitter, CVDeterioration, CVGeometry
+from dataset.transforms import CVColorJitter, CVDeterioration, CVGeometry
 from torchvision import transforms
 import cv2
 import math
@@ -98,3 +98,21 @@ class ImageDataset(Dataset):
     def __getitem__(self, idx):
         image, text, idx_new = self.get(idx)
         return image, text
+
+
+if __name__ == '__main__':
+    src_dir = "/media/palm/Data/ocr/"
+    train_jsonl = '/home/palm/PycharmProjects/capocr/data/train.jsonl'
+    val_jsonl = '/home/palm/PycharmProjects/capocr/data/val.jsonl'
+    train_set = ImageDataset(
+        src_dir,
+        train_jsonl
+    )
+    for i in range(len(train_set)):
+        train_set[i]
+    valid_set = ImageDataset(
+        src_dir,
+        val_jsonl
+    )
+    for i in range(len(valid_set)):
+        valid_set[i]

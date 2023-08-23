@@ -101,8 +101,8 @@ if __name__ == '__main__':
         vit_model = "google/vit-base-patch16-224-in21k"
         text_decode_model = "ai-forever/mGPT"
         src_dir = "/media/palm/Data/ocr/"
-        train_jsonl = '/project/lt200060-capgen/coco/annotations/captions_train2017.json'
-        val_jsonl = '/project/lt200060-capgen/coco/annotations/captions_val2017.json'
+        train_jsonl = '/home/palm/PycharmProjects/capocr/data/train.jsonl'
+        val_jsonl = '/home/palm/PycharmProjects/capocr/data/val.jsonl'
         config_file = '/home/palm/PycharmProjects/mmdetection/configs/dino/dino-4scale_r50_8xb2-12e_coco.py'
         detector_weight = ''
         output_dir = os.path.join('/tmp/out/mm_dino_8x8')
@@ -138,9 +138,9 @@ if __name__ == '__main__':
     model.config.eos_token_id = tokenizer.eos_token_id
     model.config.decoder_start_token_id = tokenizer.bos_token_id
     model.config.pad_token_id = tokenizer.pad_token_id
-    model.save_pretrained(output_dir)
-    # feature_extractor.save_pretrained(output_dir)
-    tokenizer.save_pretrained(output_dir)
+    model.save_pretrained(os.path.join(output_dir, 'train'))
+    feature_extractor.save_pretrained(os.path.join(output_dir, 'train'))
+    tokenizer.save_pretrained(os.path.join(output_dir, 'train'))
 
     train_set = ImageDataset(
         src_dir,

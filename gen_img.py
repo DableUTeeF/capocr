@@ -31,6 +31,8 @@ def deemojify(text):
                                 u"\u231a"
                                 u"\ufe0f"  # dingbats
                                 u"\u3030"
+                                "\\\\"
+                                '\"'
                                 "]+", re.UNICODE)
     return regrex_pattern.sub(r'', text)
 
