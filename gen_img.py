@@ -3,6 +3,10 @@ from PIL import Image, ImageFont, ImageDraw
 import glob
 import cv2
 import re
+import albumentations as A
+import argparse
+import glob
+from tqdm import tqdm
 
 
 def deemojify(text):
@@ -87,13 +91,45 @@ def random_example(
     return np.asarray(result), text
 
 
-###################################################################################
+def sepia(image):
+    paper3 = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+    white = paper3 > 0
+    paper3[white] = (paper3[white] * (np.random.rand()/2+0.5)).astype('uint8')
+    paper3 = sepia_(image=paper3)['image'][..., ::-1]
+    # paper3 = color_(image=paper3)['image']
+    return paper3
 
-import argparse
-import glob
-from tqdm import tqdm
+
+def noise(image):
+    size = np.random.rand() + 0.8
+    image = cv2.resize(image, None, None, size, size)
+    paper4 = noise_(image=image)['image']
+    # paper4 = cv2.resize(paper4, (210 * 2, 297 * 2))
+    return paper4
+
+
+def rotate_bound(image):
+    angle = np.random.randint(-2, 2)
+    print(angle)
+    (h, w) = image.shape[:2]
+    (cX, cY) = (w / 2, h / 2)
+
+    M = cv2.getRotationMatrix2D((cX, cY), -angle, 1.0)
+    cos = np.abs(M[0, 0])
+    sin = np.abs(M[0, 1])
+
+    nW = int((h * sin) + (w * cos))
+    nH = int((h * cos) + (w * sin))
+
+    M[0, 2] += (nW / 2) - cX
+    M[1, 2] += (nH / 2) - cY
+
+    return cv2.warpAffine(image, M, (nW, nH), borderValue=255)
+
 
 if __name__ == "__main__":
+    sepia_ = A.ToSepia(p=0.5)
+    noise_ = A.MultiplicativeNoise(multiplier=[0.9, 1.1], elementwise=True, per_channel=True, p=1)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('txt', type=str, help="Text folder")
@@ -111,9 +147,12 @@ if __name__ == "__main__":
 
             filename = f"{args.out}/images/%.6d.png" % j
             j += 1
+            img = rotate_bound(img)
+            img = sepia(img)
+            img = noise(img)
             cv2.imwrite(filename, img)
             file.write("{\"filename\": \"%s\", \"text\": \"%s\"}\n" % (filename, text))
             file.flush()
 
-            if j >= 999999:
+            if j >= 100:
                 break
