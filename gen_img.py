@@ -7,6 +7,7 @@ import albumentations as A
 import argparse
 import glob
 from tqdm import tqdm
+from multiprocessing import Pool, Value, Array
 
 
 def deemojify(text):
@@ -34,16 +35,37 @@ def deemojify(text):
     return regrex_pattern.sub(r'', text)
 
 
-def create_text_generator(txtdir):
+def create_text_generator_mp(m, txtdir):
     filelist = glob.glob('%s/*.txt' % txtdir)
     for j, f in enumerate(filelist):
         file = open(f, "r")
         for i, line in enumerate(file):
+            if i % 8 != m:
+                continue
             line = deemojify(line.rstrip('\n'))
             for k in range(0, len(line), 100):  # skip 150 per chunk
                 # random length between 10-150
                 l = 10 + np.random.randint(90)
                 yield line[k:k + l]
+
+
+def mp_save(m, txtdir, max_num):
+    j = 0
+    out_text = ''
+    for text_org in create_text_generator_mp(m, txtdir):
+        img, text = random_example(text_org, font_list)
+        if img is None:
+            continue
+        filename = f"{args.out}/images/%d_%.6d.jpg" % (m, j)
+        j += 1
+        img = rotate_bound(img)
+        img = sepia(img)
+        img = noise(img)
+        cv2.imwrite(filename, img)
+        out_text += "{\"filename\": \"%s\", \"text\": \"%s\"}\n" % (filename, text)
+        if j >= max_num:
+            return out_text
+    return out_text
 
 
 def random_example(
@@ -111,7 +133,6 @@ def noise(image):
 
 def rotate_bound(image):
     angle = np.random.randint(-2, 2)
-    print(angle)
     (h, w) = image.shape[:2]
     (cX, cY) = (w / 2, h / 2)
 
@@ -142,18 +163,16 @@ if __name__ == "__main__":
 
     with open(f"{args.out}/annotations", "w") as file:
         j = 0
-        for text_org in tqdm(create_text_generator(args.txt)):
-            img, text = random_example(text_org, font_list)
-            if img is None: continue
-
-            filename = f"{args.out}/images/%.6d.png" % j
-            j += 1
-            img = rotate_bound(img)
-            img = sepia(img)
-            img = noise(img)
-            cv2.imwrite(filename, img)
-            file.write("{\"filename\": \"%s\", \"text\": \"%s\"}\n" % (filename, text))
-            file.flush()
-
-            if j >= 100:
-                break
+        with Pool() as pool:
+            res = pool.starmap(mp_save, [
+                (0, args.txt, 125000),
+                (1, args.txt, 125000),
+                (2, args.txt, 125000),
+                (3, args.txt, 125000),
+                (4, args.txt, 125000),
+                (5, args.txt, 125000),
+                (6, args.txt, 125000),
+                (7, args.txt, 125000),
+            ])
+            for re in res:
+                file.write(re)
