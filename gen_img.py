@@ -157,22 +157,16 @@ if __name__ == "__main__":
     parser.add_argument('txt', type=str, help="Text folder")
     parser.add_argument('ttf', type=str, help="Font folder")
     parser.add_argument('out', type=str, help="Out folder")
+    parser.add_argument('num_workers', type=int, help="Num Workers")
     args = parser.parse_args()
 
     font_list = glob.glob('%s/*.ttf' % args.ttf)
-
+    array = []
+    for i in range(args.num_workers):
+        array.append((i, args.txt, 1000000 // args.num_workers))
     with open(f"{args.out}/annotations", "w") as file:
         j = 0
         with Pool() as pool:
-            res = pool.starmap(mp_save, [
-                (0, args.txt, 125000),
-                (1, args.txt, 125000),
-                (2, args.txt, 125000),
-                (3, args.txt, 125000),
-                (4, args.txt, 125000),
-                (5, args.txt, 125000),
-                (6, args.txt, 125000),
-                (7, args.txt, 125000),
-            ])
+            res = pool.starmap(mp_save, array)
             for re in res:
                 file.write(re)
