@@ -55,6 +55,7 @@ def random_example(
     # random
     font_idx = np.random.randint(len(font_list))
     font_size = np.random.randint(font_size_min, high=font_size_max)
+    x = np.random.randint(0, 100)
     for _ in range(len(text)):
         font = ImageFont.truetype(font_list[font_idx], font_size)  # load font
 
@@ -63,7 +64,7 @@ def random_example(
 
         # get the size of the text
         # text_size = draw.textsize(text, font)
-        bbox = draw.textbbox(xy=(0, 0), text=text, font=font)
+        bbox = draw.textbbox(xy=(0+x, 0), text=text, font=font)
         if bbox[2] <= 0 or bbox[3] <= 0:
             print("Error (%s)" % text)
             return None, None
@@ -71,7 +72,7 @@ def random_example(
         # resize and draw
         image = image.resize((bbox[2], bbox[3]))
         draw = ImageDraw.Draw(image)
-        draw.text((0, 0), text, 0, font=font)
+        draw.text((x, 0), text, 0, font=font)
 
         w, h = image.size
         H = max_height
