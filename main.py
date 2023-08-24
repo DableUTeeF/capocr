@@ -146,7 +146,7 @@ if __name__ == '__main__':
             image_size=(args.img_h, args.img_w)
         )
     )
-    decoder = AutoModelForCausalLM.from_pretrained(text_decode_model)
+    decoder = AutoModelForCausalLM.from_pretrained(text_decode_model, add_cross_attention=True)
     model = VisionEncoderDecoderModel(None, encoder, decoder)
     feature_extractor = ViTImageProcessor(
         size={"height": args.img_h, "width": args.img_w},
