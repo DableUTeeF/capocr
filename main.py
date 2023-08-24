@@ -142,7 +142,8 @@ if __name__ == '__main__':
             num_attention_heads=args.num_attention_heads,
             intermediate_size=args.intermediate_size,
             patch_size=args.patch_size,
-            add_cross_attention=True
+            add_cross_attention=True,
+            image_size=(args.img_h, args.img_w)
         )
     )
     decoder = AutoModelForCausalLM.from_pretrained(text_decode_model)
