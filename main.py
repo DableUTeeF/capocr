@@ -75,6 +75,8 @@ def compute_metrics(eval_preds):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
+    parser.add_argument('--img_w', type=int, default=160)
+    parser.add_argument('--img_h', type=int, default=48)
     parser.add_argument('--hidden_size', type=int, default=768)
     parser.add_argument('--num_hidden_layers', type=int, default=12)
     parser.add_argument('--num_attention_heads', type=int, default=12)
@@ -84,7 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
-    expname = args.expname + f'{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
+    expname = args.expname + f'{args.img_w}_{args.img_h}_{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
     logdir = os.path.join(args.logdir, expname)
 
     if os.path.exists("/project/lt200060-capgen/coco"):
@@ -144,7 +146,11 @@ if __name__ == '__main__':
     )
     decoder = AutoModelForCausalLM.from_pretrained(text_decode_model)
     model = VisionEncoderDecoderModel(None, encoder, decoder)
-    feature_extractor = ViTImageProcessor.from_pretrained(vit_model)
+    feature_extractor = ViTImageProcessor(
+        size={"height": 224, "width": 224},
+        image_mean=0,
+        image_std=255,
+    )
     tokenizer = AutoTokenizer.from_pretrained(text_decode_model)
     tokenizer.pad_token = tokenizer.eos_token
 
