@@ -86,7 +86,7 @@ if __name__ == '__main__':
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
-    expname = args.expname + f'{args.img_w}_{args.img_h}_{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
+    expname = args.expname + f'_{args.img_w}_{args.img_h}_{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
     logdir = os.path.join(args.logdir, expname)
 
     if os.path.exists("/project/lt200060-capgen/coco"):
