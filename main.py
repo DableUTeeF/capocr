@@ -1,6 +1,6 @@
 import os
 import torch
-from transformers import ViTImageProcessor, AutoTokenizer, VisionEncoderDecoderModel
+from transformers import ViTImageProcessor, AutoTokenizer, VisionEncoderDecoderModel, ViTConfig, AutoModelForCausalLM, ViTModel
 import nltk
 import evaluate
 import numpy as np
@@ -75,7 +75,11 @@ def compute_metrics(eval_preds):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
-    parser.add_argument('--max_per_img', type=int, default=50)
+    parser.add_argument('--hidden_size', type=int, default=768)
+    parser.add_argument('--num_hidden_layers', type=int, default=12)
+    parser.add_argument('--num_attention_heads', type=int, default=12)
+    parser.add_argument('--intermediate_size', type=int, default=3072)
+    parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--bs', type=int, default=16)
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
@@ -129,7 +133,17 @@ if __name__ == '__main__':
     os.makedirs(logdir, exist_ok=args.overwrite)
     ignore_pad_token_for_loss = True
 
-    model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(vit_model, text_decode_model)
+    encoder = ViTModel(
+        ViTConfig(
+            hidden_size=args.hidden_size,
+            num_hidden_layers=args.num_hidden_layers,
+            num_attention_heads=args.num_attention_heads,
+            intermediate_size=args.intermediate_size,
+            patch_size=args.patch_size,
+        )
+    )
+    decoder = AutoModelForCausalLM.from_pretrained(text_decode_model)
+    model = VisionEncoderDecoderModel(None, encoder, decoder)
     feature_extractor = ViTImageProcessor.from_pretrained(vit_model)
     tokenizer = AutoTokenizer.from_pretrained(text_decode_model)
     tokenizer.pad_token = tokenizer.eos_token
