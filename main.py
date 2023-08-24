@@ -82,7 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--num_attention_heads', type=int, default=12)
     parser.add_argument('--intermediate_size', type=int, default=3072)
     parser.add_argument('--patch_size', type=int, default=16)
-    parser.add_argument('--bs', type=int, default=16)
+    parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
