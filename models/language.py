@@ -72,22 +72,23 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
             # Flatten the tokens
             loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
             if self.istrain:
-                teacher_output = self.teacher(
-                    input_ids,
-                    past_key_values,
-                    attention_mask,
-                    token_type_ids,
-                    position_ids,
-                    head_mask,
-                    inputs_embeds,
-                    encoder_hidden_states,
-                    encoder_attention_mask,
-                    labels,
-                    use_cache,
-                    output_attentions,
-                    output_hidden_states,
-                    return_dict,
-                )
+                with torch.no_grad():
+                    teacher_output = self.teacher(
+                        input_ids,
+                        past_key_values,
+                        attention_mask,
+                        token_type_ids,
+                        position_ids,
+                        head_mask,
+                        inputs_embeds,
+                        encoder_hidden_states,
+                        encoder_attention_mask,
+                        labels,
+                        use_cache,
+                        output_attentions,
+                        output_hidden_states,
+                        return_dict,
+                    )
                 shift_logits_teacher = teacher_output.logits[..., :-1, :].contiguous()
                 loss_KD = bce(shift_logits.view(-1, shift_logits.size(-1)), shift_logits_teacher.view(-1, shift_logits_teacher.size(-1)))
                 loss = loss + loss_KD
