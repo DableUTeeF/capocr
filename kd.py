@@ -23,7 +23,7 @@ def tokenize(element):
 
 
 def data_prepare():
-    wikipedia = load_dataset(f"graelo/wikipedia", '20230601.th', split='train')
+    wikipedia = load_dataset(wiki, '20230601.th', split='train')
     thaisum = open(os.path.join(txt_path, 'thaisum_train.txt')).read().split('\n')
     lst20 = open(os.path.join(txt_path, 'lst20_train.txt')).read().split('\n')
     wisesight = open(os.path.join(txt_path, 'wisesight_train.txt')).read().split('\n')
@@ -51,6 +51,7 @@ if __name__ == '__main__':
     logdir = os.path.join(args.logdir, expname)
     context_length = args.context_length
     if os.path.exists("/project/lt200060-capgen/coco"):
+        wiki = '/home/nhongcha/.cache/huggingface/datasets/graelo___wikipedia/20230601.th/1.1.0/fa7b5c4902ab5a491d3fe295e3bf5c519890262c50a0401dcafd108de622068d'
         bs = args.bs
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
         txt_path = '/project/lt200060-capgen/peune/ocr/txt/'
@@ -58,6 +59,7 @@ if __name__ == '__main__':
         tokenizer_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
         config_path = "/project/lt200060-capgen/palm/huggingface/tiny-gpt2"
     elif os.path.exists("/media/palm/Data/capgen/"):
+        wiki = "graelo/wikipedia"
         bs = 1
         output_dir = '/tmp/out/'
         txt_path = '/media/palm/Data/ocr/data/txt/'
@@ -65,6 +67,7 @@ if __name__ == '__main__':
         tokenizer_path = "ai-forever/mGPT"
         config_path = "sshleifer/tiny-gpt2"
     else:
+        wiki = "graelo/wikipedia"
         bs = 2
         output_dir = '/tmp/out/'
         txt_path = '/project/lt200060-capgen/peune/ocr/txt/'
