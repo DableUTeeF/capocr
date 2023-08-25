@@ -55,24 +55,30 @@ if __name__ == '__main__':
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
         txt_path = '/project/lt200060-capgen/peune/ocr/txt/'
         workers = 4
+        tokenizer_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
+        config_path = "/project/lt200060-capgen/palm/huggingface/tiny-gpt2"
     elif os.path.exists("/media/palm/Data/capgen/"):
         bs = 1
         output_dir = '/tmp/out/'
         txt_path = '/media/palm/Data/ocr/data/txt/'
         workers = 0
+        tokenizer_path = "ai-forever/mGPT"
+        config_path = "sshleifer/tiny-gpt2"
     else:
         bs = 2
         output_dir = '/tmp/out/'
         txt_path = '/project/lt200060-capgen/peune/ocr/txt/'
         workers = 0
+        tokenizer_path = "ai-forever/mGPT"
+        config_path = "sshleifer/tiny-gpt2"
 
     os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite)
     os.makedirs(logdir, exist_ok=args.overwrite)
 
-    tokenizer = AutoTokenizer.from_pretrained("ai-forever/mGPT")
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     train_tokens, valid_tokens = data_prepare()
     config = AutoConfig.from_pretrained(
-        "sshleifer/tiny-gpt2",
+        config_path,
         vocab_size=len(tokenizer),
         n_ctx=context_length,
         bos_token_id=tokenizer.bos_token_id,
