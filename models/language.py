@@ -90,7 +90,7 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
                         return_dict,
                     )
                 shift_logits_teacher = teacher_output.logits[..., :-1, :].contiguous()
-                loss_KD = bce(shift_logits.view(-1, shift_logits.size(-1)), shift_logits_teacher.view(-1, shift_logits_teacher.size(-1)))
+                loss_KD = F.mse_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_logits_teacher.view(-1, shift_logits_teacher.size(-1)))
                 loss = loss + loss_KD
 
         if not return_dict:
