@@ -27,14 +27,12 @@ def data_prepare():
     thaisum = open(os.path.join(txt_path, 'thaisum_train.txt')).read().split('\n')
     lst20 = open(os.path.join(txt_path, 'lst20_train.txt')).read().split('\n')
     wisesight = open(os.path.join(txt_path, 'wisesight_train.txt')).read().split('\n')
-
+    print(1, flush=True)
     data = wikipedia['text'] + thaisum + lst20 + wisesight
-
-    train_data = data[10000:]
-    valid_data = data[:10000]
-
-    valid_tokens = tokenize(valid_data)
-    train_tokens = tokenize(train_data)
+    print(2, flush=True)
+    valid_tokens = tokenize(data[:10000])
+    train_tokens = tokenize(data[10000:])
+    print(3, flush=True)
     return train_tokens, valid_tokens
 
 
