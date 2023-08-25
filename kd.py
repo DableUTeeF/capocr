@@ -43,6 +43,7 @@ if __name__ == '__main__':
     parser.add_argument('expname', type=str)
     parser.add_argument('--context_length', type=int, default=256)
     parser.add_argument('--grad_accum', type=int, default=8)
+    parser.add_argument('--worker', type=int, default=1)
     parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
@@ -55,7 +56,7 @@ if __name__ == '__main__':
         bs = args.bs
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
         txt_path = '/project/lt200060-capgen/peune/ocr/txt/'
-        workers = 4
+        workers = args.worker
         tokenizer_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
         config_path = "/project/lt200060-capgen/palm/huggingface/tiny-gpt2"
     elif os.path.exists("/media/palm/Data/capgen/"):
