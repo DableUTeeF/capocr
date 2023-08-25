@@ -5,11 +5,11 @@ from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 
 
 class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
-    def __init__(self, istrain, *args, **kwargs):
+    def __init__(self, istrain, teacher_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.istrain = istrain
         if istrain:
-            self.teacher = GPT2LMHeadModel.from_pretrained('ai-forever/mGPT')
+            self.teacher = GPT2LMHeadModel.from_pretrained(teacher_path)
 
     def forward(
         self,

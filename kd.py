@@ -63,7 +63,7 @@ if __name__ == '__main__':
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
         txt_path = '/project/lt200060-capgen/peune/ocr/txt/'
         workers = args.worker
-        tokenizer_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
+        teacher_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
         config_path = "/project/lt200060-capgen/palm/huggingface/tiny-gpt2"
     elif os.path.exists("/media/palm/Data/capgen/"):
         wiki = "graelo/wikipedia"
@@ -71,7 +71,7 @@ if __name__ == '__main__':
         output_dir = '/tmp/out/'
         txt_path = '/media/palm/Data/ocr/data/txt/'
         workers = 0
-        tokenizer_path = "ai-forever/mGPT"
+        teacher_path = "ai-forever/mGPT"
         config_path = "sshleifer/tiny-gpt2"
     else:
         wiki = "graelo/wikipedia"
@@ -79,13 +79,13 @@ if __name__ == '__main__':
         output_dir = '/tmp/out/'
         txt_path = '/project/lt200060-capgen/peune/ocr/txt/'
         workers = 0
-        tokenizer_path = "ai-forever/mGPT"
+        teacher_path = "ai-forever/mGPT"
         config_path = "sshleifer/tiny-gpt2"
 
     os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite)
     os.makedirs(logdir, exist_ok=args.overwrite)
 
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+    tokenizer = AutoTokenizer.from_pretrained(teacher_path)
     train_tokens, valid_tokens = data_prepare()
     config = AutoConfig.from_pretrained(
         config_path,
@@ -94,7 +94,7 @@ if __name__ == '__main__':
         bos_token_id=tokenizer.bos_token_id,
         eos_token_id=tokenizer.eos_token_id,
     )
-    model = DistillTrainGPT2LMHeadModel(True, config)
+    model = DistillTrainGPT2LMHeadModel(True, teacher_path, config)
     model.cuda()
     model_size = sum(t.numel() for t in model.parameters())
     print(f"GPT-2 size: {model_size / 1000 ** 2:.1f}M parameters")
