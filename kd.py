@@ -9,7 +9,7 @@ import argparse
 
 def tokenize(element):
     outputs = tokenizer.batch_encode_plus(
-        element,
+        element['content'],
         truncation=True,
         max_length=context_length,
         return_overflowing_tokens=True,
@@ -19,7 +19,7 @@ def tokenize(element):
     for length, input_ids in zip(outputs["length"], outputs["input_ids"]):
         if length == context_length:
             input_batch.append(input_ids)
-    return input_batch
+    return {'input_ids': input_batch}
 
 
 def data_prepare():
@@ -27,12 +27,20 @@ def data_prepare():
     thaisum = open(os.path.join(txt_path, 'thaisum_train.txt')).read().split('\n')
     lst20 = open(os.path.join(txt_path, 'lst20_train.txt')).read().split('\n')
     wisesight = open(os.path.join(txt_path, 'wisesight_train.txt')).read().split('\n')
+
     print(1, flush=True)
     data = wikipedia['text'] + thaisum + lst20 + wisesight
+
     print(2, flush=True)
-    valid_tokens = tokenize(data[:10000])
-    train_tokens = tokenize(data[10000:])
-    print(3, flush=True)
+    train_data = Dataset.from_dict({"content": data[10000:]})
+    valid_data = Dataset.from_dict({"content": data[:10000]})
+
+    train_tokens = train_data.map(
+        tokenize, batched=True, remove_columns=train_data.column_names
+    )
+    valid_tokens = valid_data.map(
+        tokenize, batched=True, remove_columns=train_data.column_names
+    )
     return train_tokens, valid_tokens
 
 
