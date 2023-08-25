@@ -12,21 +12,21 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
             self.teacher = GPT2LMHeadModel.from_pretrained(teacher_path)
 
     def forward(
-        self,
-        input_ids,
-        past_key_values,
-        attention_mask,
-        token_type_ids,
-        position_ids,
-        head_mask,
-        inputs_embeds,
-        encoder_hidden_states,
-        encoder_attention_mask,
-        labels,
-        use_cache,
-        output_attentions,
-        output_hidden_states,
-        return_dict,
+            self,
+            input_ids=None,
+            past_key_values=None,
+            attention_mask=None,
+            token_type_ids=None,
+            position_ids=None,
+            head_mask=None,
+            inputs_embeds=None,
+            encoder_hidden_states=None,
+            encoder_attention_mask=None,
+            labels=None,
+            use_cache=None,
+            output_attentions=None,
+            output_hidden_states=None,
+            return_dict=None,
     ):
         r"""
         labels (`torch.LongTensor` of shape `(batch_size, sequence_length)`, *optional*):
@@ -105,4 +105,3 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
             attentions=transformer_outputs.attentions,
             cross_attentions=transformer_outputs.cross_attentions,
         )
-
