@@ -84,13 +84,22 @@ if __name__ == '__main__':
     parser.add_argument('--patch_size', type=int, default=16)
     parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--resume', action='store_true')
+    parser.add_argument('--pretrained', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
-    expname = args.expname + f'_{args.img_w}_{args.img_h}_{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
+    expname = args.expname + f'_{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
+    if args.pretrained:
+        expname += '_pretrained'
+    else:
+        expname += f'_{args.img_w}_{args.img_h}'
+    if args.resume:
+        expname += '_resumed'
     logdir = os.path.join(args.logdir, expname)
 
     if os.path.exists("/project/lt200060-capgen/coco"):
         vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
+        pretrained_vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
         text_decode_model = "/project/lt200060-capgen/palm/huggingface/mGPT"
         src_dir = "/project/lt200060-capgen/palm/capocr"
         train_jsonl = '/project/lt200060-capgen/palm/capocr/data/train.jsonl'
@@ -105,6 +114,7 @@ if __name__ == '__main__':
     elif os.path.exists("/media/palm/Data/capgen/"):
         os.environ['CUDA_VISIBLE_DEVICES'] = ''
         vit_model = "google/vit-base-patch16-224-in21k"
+        pretrained_vit_model = "google/vit-base-patch16-224-in21k"
         text_decode_model = "ai-forever/mGPT"
         src_dir = "/media/palm/Data/ocr/"
         train_jsonl = '/home/palm/PycharmProjects/capocr/data/train.jsonl'
@@ -118,6 +128,7 @@ if __name__ == '__main__':
         workers = 0
     else:
         vit_model = "google/vit-base-patch16-224-in21k"
+        pretrained_vit_model = "google/vit-base-patch16-224-in21k"
         text_decode_model = "ai-forever/mGPT"
         src_dir = "/media/palm/Data/ocr/"
         train_jsonl = '/project/lt200060-capgen/coco/annotations/captions_train2017.json'
@@ -131,28 +142,33 @@ if __name__ == '__main__':
         workers = 0
     rouge = evaluate.load(rouge_path)
     bleu = evaluate.load(bleu_path)
-    os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite)
-    os.makedirs(logdir, exist_ok=args.overwrite)
+    os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite or args.resume)
+    os.makedirs(logdir, exist_ok=args.overwrite or args.resume)
     ignore_pad_token_for_loss = True
-
-    encoder = ViTModel(
-        ViTConfig(
-            hidden_size=args.hidden_size,
-            num_hidden_layers=args.num_hidden_layers,
-            num_attention_heads=args.num_attention_heads,
-            intermediate_size=args.intermediate_size,
-            patch_size=args.patch_size,
-            add_cross_attention=True,
-            image_size=(args.img_h, args.img_w)
+    if not args.pretrained:
+        encoder = ViTModel(
+            ViTConfig(
+                hidden_size=args.hidden_size,
+                num_hidden_layers=args.num_hidden_layers,
+                num_attention_heads=args.num_attention_heads,
+                intermediate_size=args.intermediate_size,
+                patch_size=args.patch_size,
+                add_cross_attention=True,
+                image_size=(args.img_h, args.img_w)
+            )
         )
-    )
-    decoder = AutoModelForCausalLM.from_pretrained(text_decode_model, add_cross_attention=True)
-    model = VisionEncoderDecoderModel(None, encoder, decoder)
-    feature_extractor = ViTImageProcessor(
-        size={"height": args.img_h, "width": args.img_w},
-        image_mean=0,
-        image_std=255,
-    )
+        decoder = AutoModelForCausalLM.from_pretrained(text_decode_model, add_cross_attention=True)
+        model = VisionEncoderDecoderModel(None, encoder, decoder)
+        feature_extractor = ViTImageProcessor(
+            size={"height": args.img_h, "width": args.img_w},
+            image_mean=0,
+            image_std=255,
+        )
+
+    else:
+        model = VisionEncoderDecoderModel.from_encoder_decoder_pretrained(pretrained_vit_model, text_decode_model)
+        feature_extractor = ViTImageProcessor.from_pretrained(vit_model)
+
     tokenizer = AutoTokenizer.from_pretrained(text_decode_model)
     tokenizer.pad_token = tokenizer.eos_token
 
@@ -160,9 +176,10 @@ if __name__ == '__main__':
     model.config.eos_token_id = tokenizer.eos_token_id
     model.config.decoder_start_token_id = tokenizer.bos_token_id
     model.config.pad_token_id = tokenizer.pad_token_id
-    model.save_pretrained(os.path.join(output_dir, 'train'))
-    feature_extractor.save_pretrained(os.path.join(output_dir, 'train'))
-    tokenizer.save_pretrained(os.path.join(output_dir, 'train'))
+    if not args.resume:
+        model.save_pretrained(os.path.join(output_dir, 'train'))
+        feature_extractor.save_pretrained(os.path.join(output_dir, 'train'))
+        tokenizer.save_pretrained(os.path.join(output_dir, 'train'))
 
     train_set = ImageDataset(
         src_dir,
@@ -203,4 +220,4 @@ if __name__ == '__main__':
         eval_dataset=valid_set,
         data_collator=collate_fn,
     )
-    trainer.train()
+    trainer.train(resume_from_checkpoint=args.resume)
