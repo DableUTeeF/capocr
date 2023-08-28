@@ -1,14 +1,20 @@
 from transformers import GPT2LMHeadModel, GPT2Config, AutoModel
-from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss, MSELoss, functional as F
+from torch.nn import KLDivLoss, CrossEntropyLoss, MSELoss, functional as F
 import torch
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 
 
 class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
-    def __init__(self, distil, teacher_path, *args, **kwargs):
+    def __init__(self, config, teacher_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.distil = distil
-        if distil:
+        self.distil = config.distil
+        self.pretrain = config.pretrain
+        self.temperature = config.temperature
+        self.i_temperature = 1 / config.temperature
+        self.alpha = config.alpha
+        self.use_mse = config.use_mse
+        assert config.distil or config.pretrain
+        if config.distil:
             self.teacher = GPT2LMHeadModel.from_pretrained(teacher_path)
 
     def forward(
@@ -60,17 +66,15 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
 
         lm_logits = self.lm_head(hidden_states)
 
-        loss = None
+        loss = torch.zeros(1, device=lm_logits.device)
         if labels is not None:
-            loss_fct = CrossEntropyLoss()
-            bce = BCEWithLogitsLoss()
-            # move labels to correct device to enable model parallelism
             labels = labels.to(lm_logits.device)
             # Shift so that tokens < n predict n
             shift_logits = lm_logits[..., :-1, :].contiguous()
             shift_labels = labels[..., 1:].contiguous()
-            # Flatten the tokens
-            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            if self.pretrain:
+                loss_fct = CrossEntropyLoss()
+                loss += loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
             if self.distil:
                 with torch.no_grad():
                     teacher_output = self.teacher(
@@ -90,8 +94,15 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
                         return_dict,
                     )
                 shift_logits_teacher = teacher_output.logits[..., :-1, :].contiguous()
-                loss_KD = F.mse_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_logits_teacher.view(-1, shift_logits_teacher.size(-1)))
-                loss = loss + loss_KD
+                if self.use_mse:
+                    loss_KD = F.mse_loss(shift_logits.view(-1, shift_logits.size(-1)), shift_logits_teacher.view(-1, shift_logits_teacher.size(-1)))
+                else:
+                    loss_KD = F.kl_div(
+                        F.log_softmax(shift_logits.view(-1, shift_logits.size(-1)) * self.i_temperature, dim=1),
+                        F.softmax(shift_logits_teacher.view(-1, shift_logits_teacher.size(-1)) * self.i_temperature, dim=1)
+                    ) * (self.alpha * self.temperature * self.temperature)
+
+                loss += loss_KD
 
         if not return_dict:
             output = (lm_logits,) + transformer_outputs[1:]

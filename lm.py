@@ -52,10 +52,22 @@ if __name__ == '__main__':
     parser.add_argument('--worker', type=int, default=1)
     parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--overwrite', action='store_true')
-    parser.add_argument('--distil', action='store_true')
+    parser.add_argument('--distil', action='store_true', default=False)
+    parser.add_argument('--pretrain', action='store_true', default=False)
+    parser.add_argument('--temperature', type=int, default=8)
+    parser.add_argument('--alpha', type=int, default=0.5)
+    parser.add_argument('--use_mse', action='store_true', default=False)
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
-    expname = args.expname + f'_{args.context_length}_{args.grad_accum}_{args.bs}'
+    expname = args.expname + f'_{args.context_length}_{args.temperature}_{args.alpha}_{args.grad_accum}_{args.bs}'
+    if args.distil:
+        expname += '_distil'
+    if args.pretrain:
+        expname += '_prerained'
+    if args.use_mse:
+        expname += '_mse'
+    else:
+        expname += '_kl-div'
     logdir = os.path.join(args.logdir, expname)
     context_length = args.context_length
     if os.path.exists("/project/lt200060-capgen/coco"):
@@ -95,7 +107,7 @@ if __name__ == '__main__':
         bos_token_id=tokenizer.bos_token_id,
         eos_token_id=tokenizer.eos_token_id,
     )
-    model = DistillTrainGPT2LMHeadModel(args.distil, teacher_path, config)
+    model = DistillTrainGPT2LMHeadModel(args, teacher_path, config)
     model.cuda()
     model_size = sum(t.numel() for t in model.parameters())
     print(f"GPT-2 size: {model_size / 1000 ** 2:.1f}M parameters")
