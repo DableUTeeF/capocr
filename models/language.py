@@ -5,10 +5,10 @@ from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
 
 
 class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
-    def __init__(self, istrain, teacher_path, *args, **kwargs):
+    def __init__(self, distil, teacher_path, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.istrain = istrain
-        if istrain:
+        self.distil = distil
+        if distil:
             self.teacher = GPT2LMHeadModel.from_pretrained(teacher_path)
 
     def forward(
@@ -71,7 +71,7 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
             shift_labels = labels[..., 1:].contiguous()
             # Flatten the tokens
             loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
-            if self.istrain:
+            if self.distil:
                 with torch.no_grad():
                     teacher_output = self.teacher(
                         input_ids,

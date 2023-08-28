@@ -52,6 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--worker', type=int, default=1)
     parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--distil', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
     expname = args.expname + f'_{args.context_length}_{args.grad_accum}_{args.bs}'
@@ -94,7 +95,7 @@ if __name__ == '__main__':
         bos_token_id=tokenizer.bos_token_id,
         eos_token_id=tokenizer.eos_token_id,
     )
-    model = DistillTrainGPT2LMHeadModel(True, teacher_path, config)
+    model = DistillTrainGPT2LMHeadModel(args.distil, teacher_path, config)
     model.cuda()
     model_size = sum(t.numel() for t in model.parameters())
     print(f"GPT-2 size: {model_size / 1000 ** 2:.1f}M parameters")
