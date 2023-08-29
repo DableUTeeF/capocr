@@ -5,6 +5,12 @@ from datasets import load_dataset, DatasetDict, Dataset
 from models.language import DistillTrainGPT2LMHeadModel
 import os
 import argparse
+from transformers.trainer_callback import ProgressCallback
+
+
+def on_log(self, args, state, control, logs=None, **kwargs):
+    if state.is_local_process_zero and self.training_bar is not None:
+        _ = logs.pop("total_flos", None)
 
 
 def tokenize(element):
@@ -22,36 +28,39 @@ def tokenize(element):
     return {'input_ids': input_batch}
 
 
-def data_prepare():
+def data_prepare(debug):
     wikipedia = load_dataset(wiki, '20230601.th', split='train')
     thaisum = open(os.path.join(txt_path, 'thaisum_train.txt')).read().split('\n')
     lst20 = open(os.path.join(txt_path, 'lst20_train.txt')).read().split('\n')
     wisesight = open(os.path.join(txt_path, 'wisesight_train.txt')).read().split('\n')
 
-    print(1, flush=True)
     data = wikipedia['text'] + thaisum + lst20 + wisesight
 
-    print(2, flush=True)
-    train_data = Dataset.from_dict({"content": data[10000:]})
-    valid_data = Dataset.from_dict({"content": data[:10000]})
-
-    train_tokens = train_data.map(
-        tokenize, batched=True, remove_columns=train_data.column_names
-    )
+    num_val = 1000 if debug else 10000
+    valid_data = Dataset.from_dict({"content": data[:num_val]})
     valid_tokens = valid_data.map(
-        tokenize, batched=True, remove_columns=train_data.column_names
+        tokenize, batched=True, remove_columns=valid_data.column_names
     )
+    if not debug:
+        train_data = Dataset.from_dict({"content": data[10000:]})
+        train_tokens = train_data.map(
+            tokenize, batched=True, remove_columns=train_data.column_names
+        )
+    else:
+        train_tokens = valid_tokens
     return train_tokens, valid_tokens
 
 
+ProgressCallback.on_log = on_log
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
     parser.add_argument('--context_length', type=int, default=256)
-    parser.add_argument('--grad_accum', type=int, default=8)
+    parser.add_argument('--grad_accum', type=int, default=32)
     parser.add_argument('--worker', type=int, default=1)
     parser.add_argument('--bs', type=int, default=8)
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--debug', action='store_true')
     parser.add_argument('--distil', action='store_true', default=False)
     parser.add_argument('--pretrain', action='store_true', default=False)
     parser.add_argument('--temperature', type=int, default=8)
@@ -64,10 +73,10 @@ if __name__ == '__main__':
         expname += '_distil'
     if args.pretrain:
         expname += '_prerained'
-    if args.use_mse:
-        expname += '_mse'
-    else:
-        expname += '_kl-div'
+        if args.use_mse:
+            expname += '_mse'
+        else:
+            expname += '_kl-div'
     logdir = os.path.join(args.logdir, expname)
     context_length = args.context_length
     if os.path.exists("/project/lt200060-capgen/coco"):
@@ -78,14 +87,16 @@ if __name__ == '__main__':
         workers = args.worker
         teacher_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
         config_path = "/project/lt200060-capgen/palm/huggingface/tiny-gpt2"
+        disable_tqdm = True
     elif os.path.exists("/media/palm/Data/capgen/"):
         wiki = "graelo/wikipedia"
         bs = 1
-        output_dir = '/tmp/out/'
+        output_dir = '/media/palm/Data/ocr/cp/outs'
         txt_path = '/media/palm/Data/ocr/data/txt/'
         workers = 0
         teacher_path = "ai-forever/mGPT"
         config_path = "sshleifer/tiny-gpt2"
+        disable_tqdm = False
     else:
         wiki = "graelo/wikipedia"
         bs = 2
@@ -94,12 +105,13 @@ if __name__ == '__main__':
         workers = 0
         teacher_path = "ai-forever/mGPT"
         config_path = "sshleifer/tiny-gpt2"
+        disable_tqdm = False
 
     os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite)
     os.makedirs(logdir, exist_ok=args.overwrite)
 
     tokenizer = AutoTokenizer.from_pretrained(teacher_path)
-    train_tokens, valid_tokens = data_prepare()
+    train_tokens, valid_tokens = data_prepare(args.debug)
     config = AutoConfig.from_pretrained(
         config_path,
         vocab_size=len(tokenizer),
@@ -127,8 +139,8 @@ if __name__ == '__main__':
         logging_dir=logdir,
         dataloader_num_workers=workers,
         logging_strategy='steps',
-        logging_steps=100,
-        disable_tqdm=True,
+        logging_steps=1 if args.debug else 100,
+        disable_tqdm=disable_tqdm,
     )
 
     trainer = Trainer(

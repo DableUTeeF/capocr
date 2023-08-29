@@ -66,7 +66,7 @@ class DistillTrainGPT2LMHeadModel(GPT2LMHeadModel):
 
         lm_logits = self.lm_head(hidden_states)
 
-        loss = torch.zeros(1, device=lm_logits.device)
+        loss = 0
         if labels is not None:
             labels = labels.to(lm_logits.device)
             # Shift so that tokens < n predict n
