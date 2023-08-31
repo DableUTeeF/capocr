@@ -88,6 +88,15 @@ if __name__ == '__main__':
         teacher_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
         config_path = "/project/lt200060-capgen/palm/huggingface/tiny-gpt2"
         disable_tqdm = True
+    if os.path.exists("/tarafs/data/project/proj0174-capgen/palm"):
+        wiki = '/tarafs/data/project/proj0174-capgen/palm/graelo___wikipedia/20230601.th/1.1.0/fa7b5c4902ab5a491d3fe295e3bf5c519890262c50a0401dcafd108de622068d'
+        bs = args.bs
+        output_dir = os.path.join('workdir/', expname)
+        txt_path = '/tarafs/data/project/proj0174-capgen/palm/caption/data/txt/'
+        workers = args.worker
+        teacher_path = "/tarafs/data/project/proj0174-capgen/palm/caption/cp/mGPT"
+        config_path = "/tarafs/data/project/proj0174-capgen/palm/caption/cp/tiny-gpt2"
+        disable_tqdm = True
     elif os.path.exists("/media/palm/Data/capgen/"):
         wiki = "graelo/wikipedia"
         bs = 1
