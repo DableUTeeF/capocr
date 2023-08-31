@@ -8,6 +8,12 @@ from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments
 from dataset.ocr_data import ImageDataset
 from PIL import Image
 import argparse
+from transformers.trainer_callback import ProgressCallback
+
+
+def on_log(self, args, state, control, logs=None, **kwargs):
+    if state.is_local_process_zero and self.training_bar is not None:
+        _ = logs.pop("total_flos", None)
 
 
 def tokenization_fn(captions, max_target_length=120):
@@ -72,6 +78,7 @@ def compute_metrics(eval_preds):
     return result
 
 
+ProgressCallback.on_log = on_log
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
