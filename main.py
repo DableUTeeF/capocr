@@ -96,7 +96,6 @@ if __name__ == '__main__':
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
     expname = args.expname + f'_{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
-    print(expname, flush=True)
     if args.pretrained:
         expname += '_pretrained'
     else:
@@ -104,6 +103,7 @@ if __name__ == '__main__':
     if args.resume:
         expname += '_resumed'
     logdir = os.path.join(args.logdir, expname)
+    print(expname, flush=True)
 
     if os.path.exists("/project/lt200060-capgen/coco"):
         vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
