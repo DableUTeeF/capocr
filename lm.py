@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoConfig
+from transformers import AutoTokenizer, GPT2Config
 from transformers import Trainer, TrainingArguments
 from transformers import DataCollatorForLanguageModeling
 from datasets import load_dataset, DatasetDict, Dataset
@@ -122,10 +122,13 @@ if __name__ == '__main__':
     print(teacher_path, flush=True)
     tokenizer = AutoTokenizer.from_pretrained(teacher_path)
     train_tokens, valid_tokens = data_prepare(args.debug)
-    config = AutoConfig.from_pretrained(
+    config = GPT2Config(
         config_path,
-        vocab_size=len(tokenizer),
+        n_layer=12,
+        n_head=12,
+        n_embd=768,
         n_ctx=context_length,
+        vocab_size=len(tokenizer),
         bos_token_id=tokenizer.bos_token_id,
         eos_token_id=tokenizer.eos_token_id,
     )
