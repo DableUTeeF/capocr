@@ -41,9 +41,9 @@ def generate(inputs):
 if __name__ == '__main__':
     image_path = '/home/palm/PycharmProjects/mmmmocr/imgs/samples/m.png'
     im = Image.open(image_path)
-    model = VisionEncoderDecoderModel.from_pretrained("/media/palm/Data/ocr/cap/train/checkpoint-367500")
-    image_processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
-    tokenizer = AutoTokenizer.from_pretrained("ai-forever/mGPT")
+    model = VisionEncoderDecoderModel.from_pretrained("/media/palm/Data/ocr/cp/mgpt_vit_768_12_12_3072_16_8_pretrained")
+    image_processor = ViTImageProcessor.from_pretrained("/media/palm/Data/ocr/cp/mgpt_vit_768_12_12_3072_16_8_pretrained")
+    tokenizer = AutoTokenizer.from_pretrained("/media/palm/Data/ocr/cp/mgpt_vit_768_12_12_3072_16_8_pretrained")
 
     generate(image_path)
 

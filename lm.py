@@ -1,4 +1,4 @@
-from transformers import AutoTokenizer, AutoConfig
+from transformers import AutoTokenizer, GPT2Config
 from transformers import Trainer, TrainingArguments
 from transformers import DataCollatorForLanguageModeling
 from datasets import load_dataset, DatasetDict, Dataset
@@ -78,6 +78,7 @@ if __name__ == '__main__':
         else:
             expname += '_kl-div'
     logdir = os.path.join(args.logdir, expname)
+    print(expname, flush=True)
     context_length = args.context_length
     if os.path.exists("/project/lt200060-capgen/coco"):
         wiki = '/home/nhongcha/.cache/huggingface/datasets/graelo___wikipedia/20230601.th/1.1.0/fa7b5c4902ab5a491d3fe295e3bf5c519890262c50a0401dcafd108de622068d'
@@ -87,6 +88,15 @@ if __name__ == '__main__':
         workers = args.worker
         teacher_path = "/project/lt200060-capgen/palm/huggingface/mGPT"
         config_path = "/project/lt200060-capgen/palm/huggingface/tiny-gpt2"
+        disable_tqdm = True
+    elif os.path.exists("/tarafs/data/project/proj0174-capgen/palm"):
+        wiki = '/tarafs/data/project/proj0174-capgen/palm/graelo___wikipedia/20230601.th/1.1.0/fa7b5c4902ab5a491d3fe295e3bf5c519890262c50a0401dcafd108de622068d'
+        bs = args.bs
+        output_dir = os.path.join('workdir/', expname)
+        txt_path = '/tarafs/data/project/proj0174-capgen/palm/caption/data/txt/'
+        workers = args.worker
+        teacher_path = "/tarafs/data/project/proj0174-capgen/palm/caption/cp/mGPT"
+        config_path = "/tarafs/data/project/proj0174-capgen/palm/caption/cp/tiny-gpt2"
         disable_tqdm = True
     elif os.path.exists("/media/palm/Data/capgen/"):
         wiki = "graelo/wikipedia"
@@ -109,13 +119,16 @@ if __name__ == '__main__':
 
     os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite)
     os.makedirs(logdir, exist_ok=args.overwrite)
-
+    print(teacher_path, flush=True)
     tokenizer = AutoTokenizer.from_pretrained(teacher_path)
     train_tokens, valid_tokens = data_prepare(args.debug)
-    config = AutoConfig.from_pretrained(
+    config = GPT2Config(
         config_path,
-        vocab_size=len(tokenizer),
+        n_layer=12,
+        n_head=12,
+        n_embd=768,
         n_ctx=context_length,
+        vocab_size=len(tokenizer),
         bos_token_id=tokenizer.bos_token_id,
         eos_token_id=tokenizer.eos_token_id,
     )
