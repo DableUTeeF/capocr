@@ -44,17 +44,18 @@ def disturb(word, degree, p=0.3):
         return ''.join(new_word)
 
 
-def th_wiki(data, add_noise):
-    inp = []
-    gt = []
+def th_wiki(data, add_noise, wr):
     for title in data['title']:
         if len(title) < min_length:
             continue
-        inp.append(title)
+        inp = title
+        wr.write(title)
+        wr.write(',')
         if add_noise:
-            gt.append(disturb(inp[-1], 1))
+            wr.write(disturb(inp, 1))
         else:
-            gt.append(inp[-1])
+            wr.write(inp)
+        wr.write('\n')
     for text in data['text']:
         tokens = tk(text.lower())['input_ids']
         for token in tokens:
@@ -63,43 +64,44 @@ def th_wiki(data, add_noise):
             dec = tk.decode(token)
             if len(dec) < min_length:
                 continue
-            inp.append(dec)
+            inp = dec
+            wr.write(dec)
+            wr.write(',')
             if add_noise:
-                gt.append(disturb(inp[-1], 1))
+                wr.write(disturb(inp, 1))
             else:
-                gt.append(inp[-1])
-    return inp, gt
+                wr.write(inp)
+            wr.write('\n')
 
 
-def en_wiki(data, add_noise):
-    inp = []
-    gt = []
+def en_wiki(data, add_noise, wr):
     for line in data:
         for text in line['text'].split():
             text = re.sub('[^0-9a-zA-Z]+', '', text)
             if len(text) < min_length:
                 continue
-            inp.append(text)
+            wr.write(text)
+            wr.write(',')
             if add_noise:
-                gt.append(disturb(text, 1))
+                wr.write(disturb(text, 1))
             else:
-                gt.append(text)
-    return inp, gt
+                wr.write(text)
+            wr.write('\n')
 
 
-def opus(data, add_noise):
-    inp = []
-    gt = []
+def opus(data, add_noise, wr):
     for line in data:
         for text in line['translation']['en'].split():
             text = re.sub('[^0-9a-zA-Z]+', '', text)
             if len(text) < min_length:
                 continue
-            inp.append(text)
+            wr.write(text)
+            wr.write(',')
             if add_noise:
-                gt.append(disturb(text, 1))
+                wr.write(disturb(text, 1))
             else:
-                gt.append(text)
+                wr.write(text)
+            wr.write('\n')
         tokens = tk(line['translation']['th'].lower())['input_ids']
         for token in tokens:
             if token in tk.all_special_ids:
@@ -107,12 +109,14 @@ def opus(data, add_noise):
             dec = tk.decode(token)
             if len(dec) < min_length:
                 continue
-            inp.append(dec)
+            wr.write(dec)
+            wr.write(',')
+            inp = dec
             if add_noise:
-                gt.append(disturb(inp[-1], 1))
+                wr.write(disturb(inp[-1], 1))
             else:
-                gt.append(inp[-1])
-    return inp, gt
+                wr.write(inp[-1])
+            wr.write('\n')
 
 
 if __name__ == '__main__':
@@ -122,36 +126,45 @@ if __name__ == '__main__':
     charmap = open('/home/palm/PycharmProjects/ABINet/data/charset_enth.txt').read().split('\n')
     charset = [x.split('	')[1] for x in charmap[39:165]]
     digits = [x.split('	')[1] for x in charmap if x.split('	')[1] not in charset]
-    train_inp = []
-    train_gt = []
-    val_inp = []
-    val_gt = []
+
+    # train_inp = []
+    # train_gt = []
+    # val_inp = []
+    # val_gt = []
     th_data = load_dataset('graelo/wikipedia', '20230601.th')['train']
-    inp, gt = th_wiki(th_data[20000:], False)
-    train_inp.append(inp)
-    train_gt.append(gt)
-    inp, gt = th_wiki(th_data[:20000], True)
-    val_inp.append(inp)
-    val_gt.append(gt)
+    with open('train.txt', 'a') as wr:
+        th_wiki(th_data[20000:], False, wr)
+    with open('val.txt', 'a') as wr:
+        th_wiki(th_data[:20000], True, wr)
     en_data = load_dataset('wikitext', 'wikitext-103-v1')
-    inp, gt = en_wiki(en_data['train'], False)
-    train_inp.append(inp)
-    train_gt.append(gt)
-    inp, gt = en_wiki(en_data['validation'], False)
-    val_inp.append(inp)
-    val_gt.append(gt)
-    inp, gt = en_wiki(en_data['test'], False)
-    val_inp.append(inp)
-    val_gt.append(gt)
+    with open('train.txt', 'a') as wr:
+        en_wiki(en_data['train'], False, wr)
+    with open('val.txt', 'a') as wr:
+        en_wiki(en_data['validation'], True, wr)
+        en_wiki(en_data['test'], True, wr)
     opus_data = load_dataset('opus100', 'en-th')
-    inp, gt = en_wiki(opus_data['train'], False)
-    train_inp.append(inp)
-    train_gt.append(gt)
-    inp, gt = en_wiki(opus_data['validation'], False)
-    val_inp.append(inp)
-    val_gt.append(gt)
-    inp, gt = en_wiki(opus_data['test'], False)
-    val_inp.append(inp)
-    val_gt.append(gt)
-    pd.DataFrame({'inp': train_inp, 'gt': train_gt}).to_csv('train.txt', index=None, sep='\t')
-    pd.DataFrame({'inp': val_inp, 'gt': val_gt}).to_csv('val.txt', index=None, sep='\t')
+    with open('train.txt', 'a') as wr:
+        en_wiki(opus_data['train'], False, wr)
+    with open('val.txt', 'a') as wr:
+        en_wiki(opus_data['validation'], True, wr)
+        en_wiki(opus_data['test'], True, wr)
+    # train_inp.append(inp)
+    # train_gt.append(gt)
+    # inp, gt = en_wiki(en_data['validation'], False)
+    # val_inp.append(inp)
+    # val_gt.append(gt)
+    # inp, gt = en_wiki(en_data['test'], False)
+    # val_inp.append(inp)
+    # val_gt.append(gt)
+    # opus_data = load_dataset('opus100', 'en-th')
+    # inp, gt = en_wiki(opus_data['train'], False)
+    # train_inp.append(inp)
+    # train_gt.append(gt)
+    # inp, gt = en_wiki(opus_data['validation'], False)
+    # val_inp.append(inp)
+    # val_gt.append(gt)
+    # inp, gt = en_wiki(opus_data['test'], False)
+    # val_inp.append(inp)
+    # val_gt.append(gt)
+    # pd.DataFrame({'inp': train_inp, 'gt': train_gt}).to_csv('train.txt', index=None, sep='\t')
+    # pd.DataFrame({'inp': val_inp, 'gt': val_gt}).to_csv('val.txt', index=None, sep='\t')
