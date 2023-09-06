@@ -17,8 +17,7 @@ def is_valid(text):
     out = ''
     for char in text:
         if char in charset or char in digits:
-            if ord(char) > 4000:
-                out += char
+            out += char
     return out
 
 
@@ -58,7 +57,7 @@ def th_wiki(data, add_noise, wr):
         inp = is_valid(title)
         if len(inp) < min_length:
             continue
-        wr.write(title)
+        wr.write(inp)
         wr.write('\t')
         if add_noise:
             wr.write(disturb(inp, 1))
@@ -74,7 +73,7 @@ def th_wiki(data, add_noise, wr):
             inp = is_valid(dec)
             if len(inp) < min_length:
                 continue
-            wr.write(dec)
+            wr.write(inp)
             wr.write('\t')
             if add_noise:
                 wr.write(disturb(inp, 1))

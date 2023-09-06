@@ -123,7 +123,6 @@ if __name__ == '__main__':
     tokenizer = AutoTokenizer.from_pretrained(teacher_path)
     train_tokens, valid_tokens = data_prepare(args.debug)
     config = GPT2Config(
-        config_path,
         n_layer=12,
         n_head=12,
         n_embd=768,
