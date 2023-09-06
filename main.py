@@ -100,8 +100,6 @@ if __name__ == '__main__':
         expname += '_pretrained'
     else:
         expname += f'_{args.img_w}_{args.img_h}'
-    if args.resume:
-        expname += '_resumed'
     logdir = os.path.join(args.logdir, expname)
     print(expname, flush=True)
 
