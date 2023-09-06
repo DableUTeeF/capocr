@@ -13,6 +13,15 @@ def is_digit(text, ratio=0.5):
     return True
 
 
+def is_valid(text):
+    out = ''
+    for char in text:
+        if char in charset or char in digits:
+            if ord(char) > 4000:
+                out += char
+    return out
+
+
 def disturb(word, degree, p=0.3):
     if len(word) // 2 < degree:
         return word
@@ -46,11 +55,11 @@ def disturb(word, degree, p=0.3):
 
 def th_wiki(data, add_noise, wr):
     for title in data['title']:
-        if len(title) < min_length:
+        inp = is_valid(title)
+        if len(inp) < min_length:
             continue
-        inp = title
         wr.write(title)
-        wr.write(',')
+        wr.write('\t')
         if add_noise:
             wr.write(disturb(inp, 1))
         else:
@@ -62,11 +71,11 @@ def th_wiki(data, add_noise, wr):
             if token in tk.all_special_ids:
                 continue
             dec = tk.decode(token)
-            if len(dec) < min_length:
+            inp = is_valid(dec)
+            if len(inp) < min_length:
                 continue
-            inp = dec
             wr.write(dec)
-            wr.write(',')
+            wr.write('\t')
             if add_noise:
                 wr.write(disturb(inp, 1))
             else:
@@ -78,10 +87,11 @@ def en_wiki(data, add_noise, wr):
     for line in data:
         for text in line['text'].split():
             text = re.sub('[^0-9a-zA-Z]+', '', text)
+            text = is_valid(text)
             if len(text) < min_length:
                 continue
             wr.write(text)
-            wr.write(',')
+            wr.write('\t')
             if add_noise:
                 wr.write(disturb(text, 1))
             else:
@@ -93,10 +103,11 @@ def opus(data, add_noise, wr):
     for line in data:
         for text in line['translation']['en'].split():
             text = re.sub('[^0-9a-zA-Z]+', '', text)
+            text = is_valid(text)
             if len(text) < min_length:
                 continue
             wr.write(text)
-            wr.write(',')
+            wr.write('\t')
             if add_noise:
                 wr.write(disturb(text, 1))
             else:
@@ -107,20 +118,39 @@ def opus(data, add_noise, wr):
             if token in tk.all_special_ids:
                 continue
             dec = tk.decode(token)
-            if len(dec) < min_length:
+            inp = is_valid(dec)
+            if len(inp) < min_length:
                 continue
-            wr.write(dec)
-            wr.write(',')
-            inp = dec
+            wr.write(inp)
+            wr.write('\t')
             if add_noise:
-                wr.write(disturb(inp[-1], 1))
+                wr.write(disturb(inp, 1))
             else:
-                wr.write(inp[-1])
+                wr.write(inp)
             wr.write('\n')
 
 
+def removes():
+    a = open('train.txt').readlines()
+    with open('train2.txt', 'w') as wr:
+        for line in a:
+            for char in line:
+                if not ord(char) > 4000:
+                    wr.write(char)
+    a = open('val.txt').readlines()
+    with open('val2.txt', 'w') as wr:
+        for line in a:
+            for char in line:
+                if not ord(char) > 4000:
+                    wr.write(char)
+
+
 if __name__ == '__main__':
-    min_length = 2
+    with open('train.txt', 'w') as wr:
+        wr.write('inp\tgt\n')
+    with open('val.txt', 'w') as wr:
+        wr.write('inp\tgt\n')
+    min_length = 3
 
     tk = AutoTokenizer.from_pretrained('airesearch/wangchanberta-base-att-spm-uncased')
     charmap = open('/home/palm/PycharmProjects/ABINet/data/charset_enth.txt').read().split('\n')
@@ -144,10 +174,10 @@ if __name__ == '__main__':
         en_wiki(en_data['test'], True, wr)
     opus_data = load_dataset('opus100', 'en-th')
     with open('train.txt', 'a') as wr:
-        en_wiki(opus_data['train'], False, wr)
+        opus(opus_data['train'], False, wr)
     with open('val.txt', 'a') as wr:
-        en_wiki(opus_data['validation'], True, wr)
-        en_wiki(opus_data['test'], True, wr)
+        opus(opus_data['validation'], True, wr)
+        opus(opus_data['test'], True, wr)
     # train_inp.append(inp)
     # train_gt.append(gt)
     # inp, gt = en_wiki(en_data['validation'], False)
