@@ -65,6 +65,7 @@ if __name__ == '__main__':
     parser.add_argument('--pretrain', action='store_true', default=False)
     parser.add_argument('--temperature', type=int, default=8)
     parser.add_argument('--alpha', type=int, default=0.5)
+    parser.add_argument('--resume', action='store_true')
     parser.add_argument('--use_mse', action='store_true', default=False)
     parser.add_argument('--logdir', type=str, default='./logs')
     args = parser.parse_args()
@@ -117,8 +118,8 @@ if __name__ == '__main__':
         config_path = "sshleifer/tiny-gpt2"
         disable_tqdm = False
 
-    os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite)
-    os.makedirs(logdir, exist_ok=args.overwrite)
+    os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite or args.resume)
+    os.makedirs(logdir, exist_ok=args.overwrite or args.resume)
     print(teacher_path, flush=True)
     tokenizer = AutoTokenizer.from_pretrained(teacher_path)
     train_tokens, valid_tokens = data_prepare(args.debug)
@@ -139,7 +140,7 @@ if __name__ == '__main__':
     tokenizer.pad_token = tokenizer.eos_token
     data_collator = DataCollatorForLanguageModeling(tokenizer, mlm=False)
 
-    args = TrainingArguments(
+    cfg = TrainingArguments(
         evaluation_strategy="epoch",
         save_strategy="steps",
         save_steps=5000,
@@ -158,9 +159,9 @@ if __name__ == '__main__':
     trainer = Trainer(
         model=model,
         tokenizer=tokenizer,
-        args=args,
+        args=cfg,
         data_collator=data_collator,
         train_dataset=train_tokens,
         eval_dataset=valid_tokens,
     )
-    trainer.train()
+    trainer.train(resume_from_checkpoint=args.resume)
