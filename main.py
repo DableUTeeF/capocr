@@ -103,13 +103,12 @@ if __name__ == '__main__':
     logdir = os.path.join(args.logdir, expname)
     print(expname, flush=True)
 
-    if os.path.exists("/project/lt200060-capgen/coco"):
+    if os.path.exists("/project/lt200060-capgen/palm/"):
         vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
         pretrained_vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
         text_decode_model = "/project/lt200060-capgen/palm/huggingface/mGPT"
-        src_dir = "/project/lt200060-capgen/palm/capocr"
-        train_jsonl = '/project/lt200060-capgen/palm/capocr/data/train.jsonl'
-        val_jsonl = '/project/lt200060-capgen/palm/capocr/data/val.jsonl'
+        src_dir = "/project/lt200060-capgen/palm/capocr/data2"
+        jsonl = '/project/lt200060-capgen/palm/capocr/data2/val.jsonl'
         config_file = '/home/nhongcha/mmdetection/configs/dino/dino-4scale_r50_8xb2-12e_coco.py'
         detector_weight = '/project/lt200060-capgen/palm/pretrained/dino-4scale_r50_8xb2-12e_coco_20221202_182705-55b2bba2.pth'
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
@@ -123,8 +122,7 @@ if __name__ == '__main__':
         pretrained_vit_model = "google/vit-base-patch16-224-in21k"
         text_decode_model = "ai-forever/mGPT"
         src_dir = "/media/palm/Data/ocr/"
-        train_jsonl = '/home/palm/PycharmProjects/capocr/data/train.jsonl'
-        val_jsonl = '/home/palm/PycharmProjects/capocr/data/val.jsonl'
+        jsonl = '/project/lt200060-capgen/palm/capocr/data2/val.jsonl'
         config_file = '/home/palm/PycharmProjects/mmdetection/configs/dino/dino-4scale_r50_8xb2-12e_coco.py'
         detector_weight = ''
         output_dir = os.path.join('/tmp/out/mm_dino_8x8')
@@ -137,8 +135,7 @@ if __name__ == '__main__':
         pretrained_vit_model = "google/vit-base-patch16-224-in21k"
         text_decode_model = "ai-forever/mGPT"
         src_dir = "/media/palm/Data/ocr/"
-        train_jsonl = '/project/lt200060-capgen/coco/annotations/captions_train2017.json'
-        val_jsonl = '/project/lt200060-capgen/coco/annotations/captions_val2017.json'
+        jsonl = '/project/lt200060-capgen/palm/capocr/data2/val.jsonl'
         config_file = '/home/palm/PycharmProjects/mmdetection/configs/dino/dino-4scale_r50_8xb2-12e_coco.py'
         detector_weight = '/home/palm/PycharmProjects/mmdetection/cp/dino-4scale_r50_8xb2-12e_coco_20221202_182705-55b2bba2.pth'
         output_dir = os.path.join('/tmp/out/mm_dino_8x8')
@@ -189,12 +186,16 @@ if __name__ == '__main__':
 
     train_set = ImageDataset(
         src_dir,
-        train_jsonl
+        jsonl,
+        is_training=True,
+        single_jsonl=True
     )
     print(len(train_set), flush=True)
     valid_set = ImageDataset(
         src_dir,
-        val_jsonl
+        jsonl,
+        is_training=False,
+        single_jsonl=True
     )
     print(len(valid_set), flush=True)
     # train_loader = DataLoader(train_set, **train_hyperparams)

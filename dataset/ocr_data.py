@@ -23,6 +23,7 @@ class ImageDataset(Dataset):
                  data_aug: bool = True,
                  multiscales: bool = True,
                  convert_mode: str = 'RGB',
+                 single_jsonl=False,
                  ):
         self.data_aug = data_aug
         self.convert_mode = convert_mode
@@ -33,9 +34,15 @@ class ImageDataset(Dataset):
         self.src = src
         if not os.path.exists(jsonl):
             self.data = ['{"filename": "./dataset/images/000000.png", "text": "4"}'] * 100
+        elif single_jsonl:
+            self.data = []
+            kw = 'train' if is_training else 'val'
+            for data in open(jsonl).read().split('\n')[:-1]:
+                if kw in data['filename']:
+                    self.data.append(data)
         else:
             self.data = open(jsonl).read().split('\n')[:-1]
-        if self.is_training and self.data_aug:
+        if self.data_aug:
             self.augment_tfs = transforms.Compose([
                 CVGeometry(degrees=45, translate=(0.0, 0.0), scale=(0.5, 2.), shear=(45, 15), distortion=0.5, p=0.5),
                 CVDeterioration(var=20, degrees=6, factor=4, p=0.25),
