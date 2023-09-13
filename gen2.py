@@ -110,15 +110,23 @@ def aug_text(english, short_english, thai, short_thai):
             text = f'{number} {added} {text}'
         yield text
 
-s = 'val'
-english, short_english, thai, short_thai = get_data(f'../ABINet/val.txt')
-with open('data2/val.jsonl', 'w') as wr:
+
+if __name__ == '__main__':
+    s = 'val'
+    path = '/media/palm/Data/ocr/data3'
+    os.makedirs(os.path.join(path, f'images/val'))
+    os.makedirs(os.path.join(path, f'images/train'))
+    english, short_english, thai, short_thai = get_data(f'../ABINet/val.txt')
+    wr = open(os.path.join(path, 'val.jsonl'), 'w')
     for idx, text in enumerate(aug_text(english, short_english, thai, short_thai)):
         image, _ = generate(text, np.random.choice(font_list), 40, int(np.random.rand()*150))
         augd_image = aug(image)
-        if idx >= 100000:
+        if idx == 100000:
             s = 'train'
+            wr = open(os.path.join(path, 'train.jsonl'), 'w')
+        elif idx >= 2100000:
+            break
         filename = f'images/{s}/{idx}.jpg'
         wr.write(json.dumps({'filename': filename, 'text': text}))
         wr.write('\n')
-        cv2.imwrite(os.path.join('data2', filename), augd_image)
+        cv2.imwrite(os.path.join(path, filename), augd_image)

@@ -38,6 +38,7 @@ class ImageDataset(Dataset):
             self.data = []
             kw = 'train' if is_training else 'val'
             for data in open(jsonl).read().split('\n')[:-1]:
+                data = json.loads(data)
                 if kw in data['filename']:
                     self.data.append(data)
         else:
