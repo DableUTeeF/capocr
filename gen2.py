@@ -111,7 +111,7 @@ def aug_text(english, short_english, thai, short_thai):
         yield text
 
 s = 'val'
-english, short_english, thai, short_thai = get_data(f'/project/lt200060-capgen/palm/ABINet/val.txt')
+english, short_english, thai, short_thai = get_data(f'../ABINet/val.txt')
 with open('data2/val.jsonl', 'w') as wr:
     for idx, text in enumerate(aug_text(english, short_english, thai, short_thai)):
         image, _ = generate(text, np.random.choice(font_list), 40, int(np.random.rand()*150))
