@@ -9,7 +9,40 @@ import json
 import os
 
 
-font_list = glob.glob('ttf/*.ttf')
+font_list = [
+    # "/home/palm/PycharmProjects/capocr/ttf/Mitr-Light.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/Mitr-Medium.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/Mitr-Regular.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/Niramit-Light.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/Niramit-Medium.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/Niramit-Regular.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH Charm of AU.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH Charmonman.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH Fahkwang.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH K2D July8 Italic.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH K2D July8.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH Kodchasal.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH Mali Grade6.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH Niramit AS Italic.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/TH Niramit AS.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/THSarabun.ttf",
+    # "/home/palm/PycharmProjects/capocr/ttf/THSarabunNew.ttf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraKasFDBold.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraKas.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraKasBold.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraKasFD.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraJad-Italic v2.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraJad v2.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraJad-bold v2.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSPraJad-boldItalic v2.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSChatThaiUI-Light.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSChatThai.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSChatThai-Bold.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSChatThai-Light.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSChatThaiUI.otf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSChatThaiUI.ttf",
+    "/home/palm/PycharmProjects/capocr/ttf/CSChatThaiUI-Bold.otf",
+]
 
 
 def generate(
@@ -54,12 +87,29 @@ def is_short(text):
     return len(str(text)) < 10
 
 
+def shift(image):
+    if np.random.rand() > 0.3:
+        return image
+    height = image.shape[0]
+    halfheight = height // 2
+    offset = np.random.randint(1, 3)
+    lr = np.random.rand() > 0.5
+    pos = np.random.randint(halfheight-10, halfheight+10)
+    if lr:
+        image[:pos, :-offset] = image[:pos, offset:]
+    else:
+        image[:pos, offset:] = image[:pos, :-offset]
+    return image
+
 n = 2
 p = 0.5
 size_ratio = (0.8, 1.2)
 kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (n, n))
 noise = albu.MultiplicativeNoise(multiplier=[0.9, 1.1], elementwise=True, per_channel=True, p=p)
 blur = albu.OneOf([albu.AdvancedBlur(p=p), albu.GaussianBlur(p=p)])
+dist = albu.OneOf([albu.OpticalDistortion(p=p), 
+
+                   ])
 def aug(image):
     if np.random.rand() < p:
         mask = 1-cv2.morphologyEx((image < 255).astype('uint8'), cv2.MORPH_ERODE, kernel)
@@ -71,6 +121,7 @@ def aug(image):
     image = cv2.resize(image, ori_size)
     image = noise(image=image, )['image']
     image = blur(image=image, )['image']
+    image = shift(image)
     return image
 
 
@@ -113,7 +164,7 @@ def aug_text(english, short_english, thai, short_thai):
 
 if __name__ == '__main__':
     s = 'val'
-    path = '/media/palm/Data/ocr/data3'
+    path = 'data3'
     os.makedirs(os.path.join(path, f'images/val'))
     os.makedirs(os.path.join(path, f'images/train'))
     english, short_english, thai, short_thai = get_data(f'../ABINet/val.txt')
@@ -121,10 +172,10 @@ if __name__ == '__main__':
     for idx, text in enumerate(aug_text(english, short_english, thai, short_thai)):
         image, _ = generate(text, np.random.choice(font_list), 40, int(np.random.rand()*150))
         augd_image = aug(image)
-        if idx == 100000:
+        if idx == 10000:
             s = 'train'
             wr = open(os.path.join(path, 'train.jsonl'), 'w')
-        elif idx >= 2100000:
+        elif idx >= 190000:
             break
         filename = f'images/{s}/{idx}.jpg'
         wr.write(json.dumps({'filename': filename, 'text': text}))
