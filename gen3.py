@@ -170,14 +170,14 @@ def aug_text(english, short_english, thai, short_thai):
 if __name__ == '__main__':
     s = 'val'
     path = 'data5'
-    os.makedirs(os.path.join(path, f'images/val'))
-    os.makedirs(os.path.join(path, f'images/train'))
+    os.makedirs(os.path.join(path, f'images/val'), exist_ok=True)
+    os.makedirs(os.path.join(path, f'images/train'), exist_ok=True)
     data = open(f'data/อักษรค.txt').read().replace('\n', ' ').split()
     wr = open(os.path.join(path, 'val.jsonl'), 'w')
     for idx, text in enumerate(data):
         image, _ = generate(text, np.random.choice(font_list), 40, int(np.random.rand()*150))
         augd_image = aug(image)
-        if idx == 10000:
+        if idx == 1000:
             s = 'train'
             wr = open(os.path.join(path, 'train.jsonl'), 'w')
         elif idx >= 190000:
@@ -186,4 +186,4 @@ if __name__ == '__main__':
         wr.write(json.dumps({'filename': filename, 'text': text}))
         wr.write('\n')
         cv2.imwrite(os.path.join(path, filename), augd_image)
-        break
+        # break
