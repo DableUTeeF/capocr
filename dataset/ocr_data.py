@@ -42,6 +42,7 @@ class ImageDataset(Dataset):
                 if kw in d['filename']:
                     self.data.append(data)
         else:
+            print(jsonl)
             self.data = open(jsonl).read().split('\n')[:-1]
         if self.data_aug:
             self.augment_tfs = transforms.Compose([

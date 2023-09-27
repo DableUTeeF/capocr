@@ -94,6 +94,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume', action='store_true')
     parser.add_argument('--pretrained', action='store_true')
     parser.add_argument('--logdir', type=str, default='./logs')
+    parser.add_argument('--decoder', type=str, default='/project/lt200060-capgen/palm/huggingface/mGPT')
     args = parser.parse_args()
     expname = args.expname + f'_{args.hidden_size}_{args.num_hidden_layers}_{args.num_attention_heads}_{args.intermediate_size}_{args.patch_size}_{args.bs}'
     if args.pretrained:
@@ -106,9 +107,11 @@ if __name__ == '__main__':
     if os.path.exists("/project/lt200060-capgen/palm/"):
         vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
         pretrained_vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
-        text_decode_model = "/project/lt200060-capgen/palm/huggingface/mGPT"
-        src_dir = "/project/lt200060-capgen/palm/capocr/data2"
-        jsonl = '/project/lt200060-capgen/palm/capocr/data2/val.jsonl'
+        text_decode_model = args.decoder
+        src_dir = "/project/lt200060-capgen/palm/capocr/data4"
+        jsonl = '/project/lt200060-capgen/palm/capocr/data4/val.jsonl'
+        val_jsonl = '/project/lt200060-capgen/palm/capocr/data4/val.jsonl'
+        train_jsonl = '/project/lt200060-capgen/palm/capocr/data4/train.jsonl'
         config_file = '/home/nhongcha/mmdetection/configs/dino/dino-4scale_r50_8xb2-12e_coco.py'
         detector_weight = '/project/lt200060-capgen/palm/pretrained/dino-4scale_r50_8xb2-12e_coco_20221202_182705-55b2bba2.pth'
         output_dir = os.path.join('/project/lt200060-capgen/palm/capocr/workdir/', expname)
@@ -186,16 +189,16 @@ if __name__ == '__main__':
 
     train_set = ImageDataset(
         src_dir,
-        jsonl,
+        train_jsonl,
         is_training=True,
-        single_jsonl=True
+        single_jsonl=False
     )
     print(len(train_set), flush=True)
     valid_set = ImageDataset(
         src_dir,
-        jsonl,
+        val_jsonl,
         is_training=False,
-        single_jsonl=True
+        single_jsonl=False
     )
     print(len(valid_set), flush=True)
     # train_loader = DataLoader(train_set, **train_hyperparams)
