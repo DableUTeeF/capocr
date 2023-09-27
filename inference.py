@@ -39,11 +39,12 @@ def generate(inputs):
 
 
 if __name__ == '__main__':
+    p = "/media/palm/Data/ocr/cp/mgpt_vit_768_12_12_3072_16_8_pretrained"
     image_path = '/home/palm/PycharmProjects/mmmmocr/imgs/samples/m.png'
     im = Image.open(image_path)
-    model = VisionEncoderDecoderModel.from_pretrained("/media/palm/Data/ocr/cp/mgpt_vit_768_12_12_3072_16_8_pretrained")
-    image_processor = ViTImageProcessor.from_pretrained("/media/palm/Data/ocr/cp/mgpt_vit_768_12_12_3072_16_8_pretrained")
-    tokenizer = AutoTokenizer.from_pretrained("/media/palm/Data/ocr/cp/mgpt_vit_768_12_12_3072_16_8_pretrained")
+    model = VisionEncoderDecoderModel.from_pretrained(p)
+    image_processor = ViTImageProcessor.from_pretrained(p)
+    tokenizer = AutoTokenizer.from_pretrained(p)
 
     generate(image_path)
 
