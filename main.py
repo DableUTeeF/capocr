@@ -96,6 +96,7 @@ def compute_metrics(eval_preds):
 
 ProgressCallback.on_log = on_log
 if __name__ == '__main__':
+    num_printed = 0
     parser = argparse.ArgumentParser()
     parser.add_argument('expname', type=str)
     parser.add_argument('--img_w', type=int, default=160)
@@ -120,14 +121,38 @@ if __name__ == '__main__':
         expname += f'_{args.img_w}_{args.img_h}'
     logdir = os.path.join(args.logdir, expname)
     print(expname, flush=True)
+    if os.path.exists("/project/lt200060-capgen/coco"):
+        vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
+        pretrained_vit_model = "/project/lt200060-capgen/palm/huggingface/vit-base-patch16-224-in21k"
+        text_decode_model = args.decoder
+        bleu_path = '/home/nhongcha/hf-caption/bleu/bleu.py'
+        rouge_path = '/home/nhongcha/hf-caption/rouge/'
+        output_dir = os.path.join('workdir/', expname)
+        workers = 4
+        mji='/project/lt200060-capgen/palm/ocr_data/train/mjsynth/mnt/ramdisk/max/90kDICT32px/*/*/*.jpg' 
+        stl='/project/lt200060-capgen/palm/ocr_data/train/synthtext/labels.tsv'
+        sti='/project/lt200060-capgen/palm/ocr_data/train/synthtext/crop'
+        funsd_labels=('/project/lt200060-capgen/palm/ocr_data/funsd/train_label.json', '/project/lt200060-capgen/palm/ocr_data/funsd/test_label.json')
+        funsd_images='/project/lt200060-capgen/palm/ocr_data/funsd/crops'
+        json_mode='synth_train.json'
+        disable_tqdm = True
 
-    vit_model = "google/vit-base-patch16-224-in21k"
-    pretrained_vit_model = "google/vit-base-patch16-224-in21k"
-    text_decode_model = "gpt2"
-    output_dir = os.path.join('workdir/', expname)
-    bleu_path = 'bleu'
-    rouge_path = 'bleu'
-    workers = 0
+    else:
+        vit_model = "google/vit-base-patch16-224-in21k"
+        pretrained_vit_model = "google/vit-base-patch16-224-in21k"
+        text_decode_model = "gpt2"
+        output_dir = os.path.join('workdir/', expname)
+        bleu_path = 'bleu'
+        rouge_path = 'bleu'
+        workers = 0
+        mji='/home/palm/data/mjsynth/images/*/*/*.jpg' 
+        stl='/home/palm/data/synthtext/labels.tsv'
+        sti='/home/palm/data/synthtext/cropped'
+        funsd_labels=('/home/palm/data/funsd/train_label.json', '/home/palm/data/funsd/test_label.json')
+        funsd_images='/home/palm/data/funsd/crops'
+        json_mode = None
+        disable_tqdm = False
+
     rouge = evaluate.load(rouge_path)
     bleu = evaluate.load(bleu_path)
     os.makedirs(os.path.join(output_dir, 'train'), exist_ok=args.overwrite or args.resume)
@@ -169,9 +194,9 @@ if __name__ == '__main__':
         feature_extractor.save_pretrained(os.path.join(output_dir, 'train'))
         tokenizer.save_pretrained(os.path.join(output_dir, 'train'))
 
-    train_set = SynthDataset(tokenizer)
+    train_set = SynthDataset(tokenizer, mji, stl, sti, json_mode=json_mode)
     print(len(train_set), flush=True)
-    valid_set = FunsdDataset(tokenizer)
+    valid_set = FunsdDataset(tokenizer, labels=funsd_labels, images=funsd_images)
     print(len(valid_set), flush=True)
     # train_loader = DataLoader(train_set, **train_hyperparams)
     # valid_loader = DataLoader(valid_set, **valid_hyperparams)
@@ -191,7 +216,7 @@ if __name__ == '__main__':
         dataloader_num_workers=workers,
         logging_strategy='steps',
         logging_steps=100,
-        disable_tqdm=False,
+        disable_tqdm=disable_tqdm,
         local_rank=args.local_rank,
         warmup_steps=1000,
         warmup_ratio=1e-3,
