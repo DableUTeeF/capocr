@@ -46,7 +46,7 @@ class ImageDataset(Dataset):
             self.data = open(jsonl).read().split('\n')[:-1]
         if self.data_aug:
             self.augment_tfs = transforms.Compose([
-                CVGeometry(degrees=45, translate=(0.0, 0.0), scale=(0.5, 2.), shear=(45, 15), distortion=0.5, p=0.5),
+                CVGeometry(degrees=45, translate=(0.0, 0.0), scale=(0.5, 2.), shear=(45, 15), distortion=0.5, p=0.5),       
                 CVDeterioration(var=20, degrees=6, factor=4, p=0.25),
                 CVColorJitter(brightness=0.5, contrast=0.5, saturation=0.5, hue=0.1, p=0.25)
             ])
